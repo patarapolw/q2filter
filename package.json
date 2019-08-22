@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "prepare": "tsc -p tsconfig.lib.json",
     "test:build": "ts-node tests/build.ts",
     "test": "ts-mocha tests/**/*.spec.ts"
   },
