@@ -1,0 +1,42 @@
+{
+  "name": "qparser",
+  "version": "0.1.0",
+  "description": "Search query parser from Array.prototype.filter and MongoDB",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test:build": "ts-node tests/build.ts",
+    "test": "ts-mocha tests/**/*.spec.ts"
+  },
+  "author": {
+    "name": "Pacharapol Withayasakpunt",
+    "email": "patarapolw@gmail.com",
+    "url": "https://polvcode.dev"
+  },
+  "keywords": [
+    "qparser",
+    "query-parser",
+    "filter",
+    "mongodb"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/patarapolw/qparser.git"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^3.12.1",
+    "@types/mocha": "^5.2.7",
+    "es6-json-stable-stringify": "^2.0.2",
+    "js-yaml": "^3.13.1",
+    "mocha": "^6.2.0",
+    "ts-mocha": "^6.0.0",
+    "ts-node": "^8.3.0",
+    "typescript": "^3.5.3"
+  },
+  "dependencies": {
+    "@types/uuid": "^3.4.5",
+    "moment": "^2.24.0",
+    "uuid": "^3.3.3"
+  }
+}
