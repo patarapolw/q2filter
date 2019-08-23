@@ -69,10 +69,11 @@ export default class QParser {
 
   public filter(items: Record<string, any>[], q: string): Record<string, any>[] {
     const cond = this.getCond(q);
-    const sortBy = this.sortBy || this.default.sortBy;
 
-    if (sortBy) {
-      items = items.sort(this.sorter(sortBy, this.desc || this.default.desc || false));
+    if (this.sortBy) {
+      items = items.sort(this.sorter(this.sortBy, getFirst({cmp: [this.desc], default: true})));
+    } else if (this.default.sortBy) {
+      items = items.sort(this.sorter(this.default.sortBy, getFirst({cmp: [this.default.desc], default: false})));
     }
 
     items = items.filter(this.condFilter(cond));
@@ -484,4 +485,18 @@ export function toDateOrDefault(s: any) {
   } catch (e) { }
 
   return s;
+}
+
+export function getFirst(options: {
+  cmp: any[],
+  default?: any,
+  nil?: any[]
+}) {
+  options.nil = options.nil || [undefined];
+  for (const c of options.cmp) {
+    if (!options.nil.includes(c)) {
+      return c;
+    }
+  }
+  return options.default;
 }
