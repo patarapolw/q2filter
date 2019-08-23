@@ -487,6 +487,10 @@ export function toDateOrDefault(s: any) {
   return s;
 }
 
+/**
+ * Because a || b || c || default doesn't always work as expected.
+ * @param options 
+ */
 export function getFirst(options: {
   cmp: any[],
   default?: any,
