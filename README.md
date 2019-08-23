@@ -15,7 +15,7 @@ Example parserOptions. All options can be omitted.
 
 ```typescript
 {
-  dialect: "filter",  // or 'mongo'
+  dialect: "filter",  // or 'mongo'. Mongo is the default.
   anyOf: ["a", "b", "s", "tag"],
   isString: ["s", "tag"],
   isDate: ["date"],
