@@ -1,11 +1,11 @@
-# qparser
+# q2filter
 
 Advanced query string parser for MongoDB and `Array.prototype.filter`
 
 ## Usage
 
 ```typescript
-import QParser from "qparser";
+import QParser from "q2filter";
 const p = new QParser(parserOptions);
 const cond = p.getCond(q);  // cond for MongoDB find and aggregate
 const filteredArray = p.filter(allItems, q);  // Filtering list of items
@@ -54,5 +54,5 @@ Acceptable `q`'s and their output can be seen at [/tests/examples.yaml](/tests/e
 ## Installation
 
 ```
-npm i qparser
+npm i q2filter
 ```

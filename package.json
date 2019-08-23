@@ -1,5 +1,5 @@
 {
-  "name": "qparser",
+  "name": "q2filter",
   "version": "0.1.0",
   "description": "Search query parser from Array.prototype.filter and MongoDB",
   "main": "dist/index.js",
