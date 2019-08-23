@@ -45,7 +45,9 @@ Example parserOptions. All options can be omitted.
       }
       return Object.values(col).filter((a) => a.length > 1).reduce((a, b) => [...a, ...b], []);
     }
-  }
+  },
+  sortBy: "date",
+  desc: true
 }
 ```
 

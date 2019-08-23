@@ -16,6 +16,8 @@ export interface IQParserOptions {
   },
   noParse?: string[];
   sorter?: (sortBy?: string, desc?: boolean) => (a: Record<string, any>, b: Record<string, any>) => number;
+  sortBy?: string;
+  desc?: boolean;
 }
 
 export interface IQParserResult {
@@ -38,30 +40,39 @@ export default class QParser {
   private readonly filters: {
     [expr: string]: (items: Record<string, any>[], expr: string) => Record<string, any>[];
   }
-  private readonly noParseOptions: string[];
   private readonly sorter: (sortBy?: string, desc?: boolean) =>
   (a: Record<string, any>, b: Record<string, any>) => number;
 
+  private default = {
+    sortBy: null as string | null,
+    desc: null as boolean | null,
+    noParse: [] as string[]
+  };
+
   constructor(options: IQParserOptions = {}) {
-    const { dialect, anyOf, isString, isDate, transforms, filters, noParse, sorter } = options;
+    const { dialect, anyOf, isString, isDate, transforms, filters, noParse, sorter, sortBy, desc} = options;
 
     this.dialect = dialect || "mongo";
     this.anyOf = anyOf ? new Set(anyOf) : null;
     this.isString = isString ? new Set(isString) : null;
     this.isDate = isDate ? new Set(isDate) : null;
     this.transforms = transforms || {};
-    this.filters = filters || {};
-    this.noParseOptions = noParse || [];
+    this.filters = filters || {};    
     this.sorter = sorter || anySorter;
 
-    this.noParseOptions.push(...Object.keys(this.filters));
+    this.default.sortBy = sortBy || null;
+    this.default.desc = desc !== undefined ? desc : null;
+
+    this.default.noParse = noParse || [];
+    this.default.noParse.push(...Object.keys(this.filters));
   }
 
   public filter(items: Record<string, any>[], q: string): Record<string, any>[] {
     const cond = this.getCond(q);
+    const sortBy = this.sortBy || this.default.sortBy;
 
-    if (this.sortBy) {
-      items = items.sort(this.sorter(this.sortBy, this.desc || false));
+    if (sortBy) {
+      items = items.sort(this.sorter(sortBy, this.desc || this.default.desc || false));
     }
 
     items = items.filter(this.condFilter(cond));
@@ -174,7 +185,7 @@ export default class QParser {
         return transformFn(m0);
       }
 
-      if (this.noParseOptions.includes(m0)) {
+      if (this.default.noParse.includes(m0)) {
         this.noParse.push(m0);
         return {};
       }
