@@ -18,6 +18,7 @@ export interface IQParserOptions {
   sorter?: (sortBy?: string, desc?: boolean) => (a: Record<string, any>, b: Record<string, any>) => number;
   sortBy?: string;
   desc?: boolean;
+  debug?: boolean;
 }
 
 export interface IQParserResult {
@@ -25,13 +26,15 @@ export interface IQParserResult {
   desc?: boolean;
   cond: Record<string, any>;
   noParse: string[];
+  fields: string[];
 }
 
 export default class QParser {
   private dialect: "mongo" | "filter";
   private sortBy?: string;
   private desc?: boolean;
-  private noParse: string[] = [];
+  private noParse = new Set<string>();
+  private fields = new Set<string>();
 
   private readonly anyOf: Set<string> | null;
   private readonly isString: Set<string> | null;
@@ -43,14 +46,16 @@ export default class QParser {
   private readonly sorter: (sortBy?: string, desc?: boolean) =>
   (a: Record<string, any>, b: Record<string, any>) => number;
 
-  private default = {
+  private readonly default = {
     sortBy: null as string | null,
     desc: null as boolean | null,
     noParse: [] as string[]
   };
 
+  private readonly debug?: boolean;
+
   constructor(options: IQParserOptions = {}) {
-    const { dialect, anyOf, isString, isDate, transforms, filters, noParse, sorter, sortBy, desc} = options;
+    const { dialect, anyOf, isString, isDate, transforms, filters, noParse, sorter, sortBy, desc, debug} = options;
 
     this.dialect = dialect || "mongo";
     this.anyOf = anyOf ? new Set(anyOf) : null;
@@ -65,6 +70,8 @@ export default class QParser {
 
     this.default.noParse = noParse || [];
     this.default.noParse.push(...Object.keys(this.filters));
+
+    this.debug = debug;
   }
 
   public filter(items: Record<string, any>[], q: string): Record<string, any>[] {
@@ -91,7 +98,8 @@ export default class QParser {
   public getCond(q: string): Record<string, any> {
     this.sortBy = undefined
     this.desc = undefined;
-    this.noParse = [];
+    this.noParse = new Set<string>();
+    this.fields = new Set<string>();
 
     return this._getCond(q);
   }
@@ -101,7 +109,8 @@ export default class QParser {
       cond: this.getCond(q),
       sortBy: this.sortBy,
       desc: this.desc,
-      noParse: this.noParse
+      noParse: Array.from(this.noParse),
+      fields: Array.from(this.fields)
     };
   }
 
@@ -187,7 +196,7 @@ export default class QParser {
       }
 
       if (this.default.noParse.includes(m0)) {
-        this.noParse.push(m0);
+        this.noParse.add(m0);
         return {};
       }
 
@@ -206,23 +215,16 @@ export default class QParser {
         return {};
       }
 
-      if (op === ":") {
-        if (k === "due" || k === "nextReview") {
-          k = "nextReview";
-          v = "<="
-        } else if (k === "created" || k === "modified") {
-          v = "<=";
-        }
-      }
-
       if (v === "NULL") {
         if (this.dialect === "mongo") {
+          this.fields.add(k);
           return { $or: [
             { [k]: null },
             { [k]: "" },
             { [k]: {$exists: false} }
           ] };
         } else {
+          this.fields.add(k);
           return { [k]: { $exists: false } };
         }
       }
@@ -268,6 +270,7 @@ export default class QParser {
         }
       }
 
+      this.fields.add(k);
       return { [k]: v };
     }
 
@@ -288,8 +291,10 @@ export default class QParser {
             } else {
               v = { $substr: q };
             }
+            this.fields.add(a);
             orCond.push({ [a]: v });
           } else {
+            this.fields.add(a);
             orCond.push({ [a]: q });
           }
         }
@@ -300,6 +305,7 @@ export default class QParser {
         } else {
           v = { $substr: q };
         }
+        this.fields.add("*");
         return {"*": v}
       }
 

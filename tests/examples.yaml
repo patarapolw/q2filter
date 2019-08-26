@@ -5,6 +5,7 @@
       fullCond:
         cond: {}
         noParse: []
+        fields: []
       filteredResults:
         - {s: b, date: '2019-09-01'}
         - {s: bx, date: '2019-09-01'}
@@ -17,6 +18,7 @@
       fullCond:
         cond: {}
         noParse: []
+        fields: []
       filteredResults:
         - {s: b, date: '2019-09-01'}
         - {s: bx, date: '2019-09-01'}
@@ -30,6 +32,7 @@
       fullCond:
         cond: {$or: [{a: a}, {b: a}, {s: {$regex: a}}, {tag: {$regex: a}}]}
         noParse: []
+        fields: [a, b, s, tag]
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
     - q: 's:b'
@@ -38,6 +41,7 @@
       fullCond:
         cond: {s: {$regex: b}}
         noParse: []
+        fields: [s]
       filteredResults:
         - {s: b, date: '2019-09-01'}
         - {s: bx, date: '2019-09-01'}
@@ -49,6 +53,7 @@
       fullCond:
         cond: {$and: [{s: {$regex: b}}, {$or: [{a: c}, {b: c}, {s: {$regex: c}}, {tag: {$regex: c}}]}]}
         noParse: []
+        fields: [s, a, b, tag]
       filteredResults:
         - {s: [b, c], tag: [分类词汇, sth]}
     - q: ' s:b c>d'
@@ -57,6 +62,7 @@
       fullCond:
         cond: {$and: [{s: {$regex: b}}, {c: {$gt: d}}]}
         noParse: []
+        fields: [s, c]
       filteredResults: []
     - q: 's:b. OR c>=3 '
       cond:
@@ -64,6 +70,7 @@
       fullCond:
         cond: {$or: [{s: {$regex: b\.}}, {c: {$gte: 3}}]}
         noParse: []
+        fields: [s, c]
       filteredResults: []
     - q: 's:b. OR c>="3"'
       cond:
@@ -71,6 +78,7 @@
       fullCond:
         cond: {$or: [{s: {$regex: b\.}}, {c: {$gte: '3'}}]}
         noParse: []
+        fields: [s, c]
       filteredResults: []
     - q: 's:b. OR c>="3'
       cond:
@@ -78,6 +86,7 @@
       fullCond:
         cond: {$or: [{s: {$regex: b\.}}, {c: {$gte: '"3'}}]}
         noParse: []
+        fields: [s, c]
       filteredResults: []
     - q: s=b
       cond:
@@ -85,6 +94,7 @@
       fullCond:
         cond: {s: b}
         noParse: []
+        fields: [s]
       filteredResults:
         - {s: b, date: '2019-09-01'}
         - {s: [a, b], date: '2018-09-01'}
@@ -95,6 +105,7 @@
       fullCond:
         cond: {$or: [{s: null}, {s: ''}, {s: {$exists: false}}]}
         noParse: []
+        fields: [s]
       filteredResults:
         - {tag: 汉字, date: '2017-09-01'}
         - {}
@@ -104,6 +115,7 @@
       fullCond:
         cond: {$or: [{tag: null}, {tag: ''}, {tag: {$exists: false}}]}
         noParse: []
+        fields: [tag]
       filteredResults:
         - {s: b, date: '2019-09-01'}
         - {s: bx, date: '2019-09-01'}
@@ -115,6 +127,7 @@
       fullCond:
         cond: {$not: {$or: [{tag: null}, {tag: ''}, {tag: {$exists: false}}]}}
         noParse: []
+        fields: [tag]
       filteredResults:
         - {tag: 汉字, date: '2017-09-01'}
         - {s: [b, c], tag: [分类词汇, sth]}
@@ -124,6 +137,7 @@
       fullCond:
         cond: {date: 2018-02-17T17:00:00.000Z}
         noParse: []
+        fields: [date]
       filteredResults: []
     - q: date<2018-02-18
       cond:
@@ -131,6 +145,7 @@
       fullCond:
         cond: {date: {$lt: 2018-02-17T17:00:00.000Z}}
         noParse: []
+        fields: [date]
       filteredResults:
         - {tag: 汉字, date: '2017-09-01'}
     - q: date>2018-02-18
@@ -139,25 +154,28 @@
       fullCond:
         cond: {date: {$gt: 2018-02-17T17:00:00.000Z}}
         noParse: []
+        fields: [date]
       filteredResults:
         - {s: b, date: '2019-09-01'}
         - {s: bx, date: '2019-09-01'}
         - {s: [a, b], date: '2018-09-01'}
     - q: date<+3h
       cond:
-        date: {$lt: 2019-08-22T17:18:52.181Z}
+        date: {$lt: 2019-08-24T15:42:32.263Z}
       fullCond:
-        cond: {date: {$lt: 2019-08-22T17:18:52.183Z}}
+        cond: {date: {$lt: 2019-08-24T15:42:32.264Z}}
         noParse: []
+        fields: [date]
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
         - {tag: 汉字, date: '2017-09-01'}
     - q: date<NOW
       cond:
-        date: {$lt: 2019-08-22T14:18:52.184Z}
+        date: {$lt: 2019-08-24T12:42:32.265Z}
       fullCond:
-        cond: {date: {$lt: 2019-08-22T14:18:52.184Z}}
+        cond: {date: {$lt: 2019-08-24T12:42:32.265Z}}
         noParse: []
+        fields: [date]
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
         - {tag: 汉字, date: '2017-09-01'}
@@ -168,6 +186,7 @@
         sortBy: s
         desc: false
         noParse: []
+        fields: []
       filteredResults:
         - {tag: 汉字, date: '2017-09-01'}
         - {}
@@ -183,6 +202,7 @@
         sortBy: s
         desc: false
         noParse: []
+        fields: [s]
       filteredResults:
         - {s: b, date: '2019-09-01'}
         - {s: bx, date: '2019-09-01'}
@@ -196,6 +216,7 @@
         sortBy: s
         desc: true
         noParse: []
+        fields: [s]
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
         - {s: [b, c], tag: [分类词汇, sth]}
@@ -203,16 +224,18 @@
         - {s: b, date: '2019-09-01'}
     - q: 'is:distinct is:due'
       cond:
-        nextReview: {$lt: 2019-08-22T14:18:52.188Z}
+        nextReview: {$lt: 2019-08-24T12:42:32.269Z}
       fullCond:
-        cond: {nextReview: {$lt: 2019-08-22T14:18:52.188Z}}
+        cond: {nextReview: {$lt: 2019-08-24T12:42:32.269Z}}
         noParse: ['is:distinct']
+        fields: []
       filteredResults: []
     - q: 'is:distinct'
       cond: {}
       fullCond:
         cond: {}
         noParse: ['is:distinct']
+        fields: []
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
         - {s: [b, c], tag: [分类词汇, sth]}
@@ -225,18 +248,21 @@
       fullCond:
         cond: {}
         noParse: ['is:duplicate']
+        fields: []
       filteredResults: []
     - q: 'is:duplicate is:special'
       cond: {}
       fullCond:
         cond: {}
         noParse: ['is:duplicate', 'is:special']
+        fields: []
       filteredResults: []
     - q: 'is:duplicate OR is:special'
       cond: {}
       fullCond:
         cond: {}
         noParse: ['is:duplicate', 'is:special']
+        fields: []
       filteredResults: []
     - q: ' tag:分类'
       cond:
@@ -244,6 +270,7 @@
       fullCond:
         cond: {tag: {$regex: 分类}}
         noParse: []
+        fields: [tag]
       filteredResults:
         - {s: [b, c], tag: [分类词汇, sth]}
     - q: 词汇
@@ -252,6 +279,7 @@
       fullCond:
         cond: {$or: [{a: 词汇}, {b: 词汇}, {s: {$regex: 词汇}}, {tag: {$regex: 词汇}}]}
         noParse: []
+        fields: [a, b, s, tag]
       filteredResults:
         - {s: [b, c], tag: [分类词汇, sth]}
 - dialect: filter
@@ -261,6 +289,7 @@
       fullCond:
         cond: {}
         noParse: []
+        fields: []
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
         - {s: [b, c], tag: [分类词汇, sth]}
@@ -273,6 +302,7 @@
       fullCond:
         cond: {}
         noParse: []
+        fields: []
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
         - {s: [b, c], tag: [分类词汇, sth]}
@@ -286,6 +316,7 @@
       fullCond:
         cond: {$or: [{a: a}, {b: a}, {s: {$substr: a}}, {tag: {$substr: a}}]}
         noParse: []
+        fields: [a, b, s, tag]
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
     - q: 's:b'
@@ -294,6 +325,7 @@
       fullCond:
         cond: {s: {$substr: b}}
         noParse: []
+        fields: [s]
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
         - {s: [b, c], tag: [分类词汇, sth]}
@@ -305,6 +337,7 @@
       fullCond:
         cond: {$and: [{s: {$substr: b}}, {$or: [{a: c}, {b: c}, {s: {$substr: c}}, {tag: {$substr: c}}]}]}
         noParse: []
+        fields: [s, a, b, tag]
       filteredResults:
         - {s: [b, c], tag: [分类词汇, sth]}
     - q: ' s:b c>d'
@@ -313,6 +346,7 @@
       fullCond:
         cond: {$and: [{s: {$substr: b}}, {c: {$gt: d}}]}
         noParse: []
+        fields: [s, c]
       filteredResults: []
     - q: 's:b. OR c>=3 '
       cond:
@@ -320,6 +354,7 @@
       fullCond:
         cond: {$or: [{s: {$substr: b.}}, {c: {$gte: 3}}]}
         noParse: []
+        fields: [s, c]
       filteredResults: []
     - q: 's:b. OR c>="3"'
       cond:
@@ -327,6 +362,7 @@
       fullCond:
         cond: {$or: [{s: {$substr: b.}}, {c: {$gte: '3'}}]}
         noParse: []
+        fields: [s, c]
       filteredResults: []
     - q: 's:b. OR c>="3'
       cond:
@@ -334,6 +370,7 @@
       fullCond:
         cond: {$or: [{s: {$substr: b.}}, {c: {$gte: '"3'}}]}
         noParse: []
+        fields: [s, c]
       filteredResults: []
     - q: s=b
       cond:
@@ -341,6 +378,7 @@
       fullCond:
         cond: {s: b}
         noParse: []
+        fields: [s]
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
         - {s: [b, c], tag: [分类词汇, sth]}
@@ -351,6 +389,7 @@
       fullCond:
         cond: {s: {$exists: false}}
         noParse: []
+        fields: [s]
       filteredResults:
         - {tag: 汉字, date: '2017-09-01'}
         - {}
@@ -360,6 +399,7 @@
       fullCond:
         cond: {tag: {$exists: false}}
         noParse: []
+        fields: [tag]
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
         - {s: bx, date: '2019-09-01'}
@@ -371,6 +411,7 @@
       fullCond:
         cond: {$not: {tag: {$exists: false}}}
         noParse: []
+        fields: [tag]
       filteredResults:
         - {s: [b, c], tag: [分类词汇, sth]}
         - {tag: 汉字, date: '2017-09-01'}
@@ -380,6 +421,7 @@
       fullCond:
         cond: {date: 2018-02-17T17:00:00.000Z}
         noParse: []
+        fields: [date]
       filteredResults: []
     - q: date<2018-02-18
       cond:
@@ -387,6 +429,7 @@
       fullCond:
         cond: {date: {$lt: 2018-02-17T17:00:00.000Z}}
         noParse: []
+        fields: [date]
       filteredResults:
         - {tag: 汉字, date: '2017-09-01'}
     - q: date>2018-02-18
@@ -395,25 +438,28 @@
       fullCond:
         cond: {date: {$gt: 2018-02-17T17:00:00.000Z}}
         noParse: []
+        fields: [date]
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
         - {s: bx, date: '2019-09-01'}
         - {s: b, date: '2019-09-01'}
     - q: date<+3h
       cond:
-        date: {$lt: 2019-08-22T17:18:52.198Z}
+        date: {$lt: 2019-08-24T15:42:32.278Z}
       fullCond:
-        cond: {date: {$lt: 2019-08-22T17:18:52.198Z}}
+        cond: {date: {$lt: 2019-08-24T15:42:32.279Z}}
         noParse: []
+        fields: [date]
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
         - {tag: 汉字, date: '2017-09-01'}
     - q: date<NOW
       cond:
-        date: {$lt: 2019-08-22T14:18:52.199Z}
+        date: {$lt: 2019-08-24T12:42:32.279Z}
       fullCond:
-        cond: {date: {$lt: 2019-08-22T14:18:52.199Z}}
+        cond: {date: {$lt: 2019-08-24T12:42:32.279Z}}
         noParse: []
+        fields: [date]
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
         - {tag: 汉字, date: '2017-09-01'}
@@ -424,6 +470,7 @@
         sortBy: s
         desc: false
         noParse: []
+        fields: []
       filteredResults:
         - {tag: 汉字, date: '2017-09-01'}
         - {}
@@ -439,6 +486,7 @@
         sortBy: s
         desc: false
         noParse: []
+        fields: [s]
       filteredResults:
         - {s: b, date: '2019-09-01'}
         - {s: bx, date: '2019-09-01'}
@@ -452,6 +500,7 @@
         sortBy: s
         desc: true
         noParse: []
+        fields: [s]
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
         - {s: [b, c], tag: [分类词汇, sth]}
@@ -459,16 +508,18 @@
         - {s: b, date: '2019-09-01'}
     - q: 'is:distinct is:due'
       cond:
-        nextReview: {$lt: 2019-08-22T14:18:52.200Z}
+        nextReview: {$lt: 2019-08-24T12:42:32.280Z}
       fullCond:
-        cond: {nextReview: {$lt: 2019-08-22T14:18:52.200Z}}
+        cond: {nextReview: {$lt: 2019-08-24T12:42:32.280Z}}
         noParse: ['is:distinct']
+        fields: []
       filteredResults: []
     - q: 'is:distinct'
       cond: {}
       fullCond:
         cond: {}
         noParse: ['is:distinct']
+        fields: []
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
         - {s: [b, c], tag: [分类词汇, sth]}
@@ -481,18 +532,21 @@
       fullCond:
         cond: {}
         noParse: ['is:duplicate']
+        fields: []
       filteredResults: []
     - q: 'is:duplicate is:special'
       cond: {}
       fullCond:
         cond: {}
         noParse: ['is:duplicate', 'is:special']
+        fields: []
       filteredResults: []
     - q: 'is:duplicate OR is:special'
       cond: {}
       fullCond:
         cond: {}
         noParse: ['is:duplicate', 'is:special']
+        fields: []
       filteredResults: []
     - q: ' tag:分类'
       cond:
@@ -500,6 +554,7 @@
       fullCond:
         cond: {tag: {$substr: 分类}}
         noParse: []
+        fields: [tag]
       filteredResults:
         - {s: [b, c], tag: [分类词汇, sth]}
     - q: 词汇
@@ -508,5 +563,6 @@
       fullCond:
         cond: {$or: [{a: 词汇}, {b: 词汇}, {s: {$substr: 词汇}}, {tag: {$substr: 词汇}}]}
         noParse: []
+        fields: [a, b, s, tag]
       filteredResults:
         - {s: [b, c], tag: [分类词汇, sth]}
