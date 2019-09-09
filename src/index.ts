@@ -3,58 +3,58 @@ import moment from "moment";
 
 (moment as any).suppressDeprecationWarnings = true;
 
-export interface IQParserOptions {
+export interface IQParserOptions<T> {
   dialect?: "mongo" | "filter";  // Default: mongo
-  anyOf?: string[],
-  isString?: string[];
-  isDate?: string[];
+  anyOf?: Array<keyof T>,
+  isString?: Array<keyof T>;
+  isDate?: Array<keyof T>;
   transforms?: {
     [expr: string]: (expr: string) => Record<string, any>;
   },
   filters?: {
-    [expr: string]: (items: Record<string, any>[], expr: string) => Record<string, any>[];
+    [expr: string]: (items: T[], expr: string) => T[];
   },
   noParse?: string[];
-  sorter?: (sortBy?: string, desc?: boolean) => (a: Record<string, any>, b: Record<string, any>) => number;
-  sortBy?: string;
+  sorter?: (sortBy?: keyof T, desc?: boolean) => (a: T, b: T) => number;
+  sortBy?: keyof T;
   desc?: boolean;
   debug?: boolean;
 }
 
-export interface IQParserResult {
-  sortBy?: string;
+export interface IQParserResult<T> {
+  sortBy?: keyof T;
   desc?: boolean;
   cond: Record<string, any>;
   noParse: string[];
-  fields: string[];
+  fields: Array<keyof T>;
 }
 
-export default class QParser {
+export default class QParser<T extends Record<string ,any>> {
   private dialect: "mongo" | "filter";
-  private sortBy?: string;
+  private sortBy?: keyof T;
   private desc?: boolean;
   private noParse = new Set<string>();
-  private fields = new Set<string>();
+  private fields = new Set<keyof T>();
 
-  private readonly anyOf: Set<string> | null;
-  private readonly isString: Set<string> | null;
-  private readonly isDate: Set<string> | null;
+  private readonly anyOf: Set<keyof T> | null;
+  private readonly isString: Set<keyof T> | null;
+  private readonly isDate: Set<keyof T> | null;
   private readonly transforms: Record<string, (expr: string) => Record<string, any>>;
   private readonly filters: {
-    [expr: string]: (items: Record<string, any>[], expr: string) => Record<string, any>[];
+    [expr: string]: (items: T[], expr: string) => T[];
   }
-  private readonly sorter: (sortBy?: string, desc?: boolean) =>
-  (a: Record<string, any>, b: Record<string, any>) => number;
+  private readonly sorter: (sortBy?: keyof T, desc?: boolean) =>
+  (a: T, b: T) => number;
 
   private readonly default = {
-    sortBy: null as string | null,
+    sortBy: null as keyof T | null,
     desc: null as boolean | null,
     noParse: [] as string[]
   };
 
   private readonly debug?: boolean;
 
-  constructor(options: IQParserOptions = {}) {
+  constructor(options: IQParserOptions<T> = {}) {
     const { dialect, anyOf, isString, isDate, transforms, filters, noParse, sorter, sortBy, desc, debug} = options;
 
     this.dialect = dialect || "mongo";
@@ -74,7 +74,7 @@ export default class QParser {
     this.debug = debug;
   }
 
-  public filter(items: Record<string, any>[], q: string): Record<string, any>[] {
+  public filter(items: T[], q: string): T[] {
     const cond = this.getCond(q);
 
     if (this.sortBy) {
@@ -104,7 +104,7 @@ export default class QParser {
     return this._getCond(q);
   }
 
-  public getCondFull(q: string): IQParserResult {
+  public getCondFull(q: string): IQParserResult<T> {
     return {
       cond: this.getCond(q),
       sortBy: this.sortBy,
@@ -444,8 +444,8 @@ export function dotGetter(d: any, k: string) {
   return v;
 }
 
-export function anySorter(sortBy?: string, desc?: boolean) {
-  return (a: any, b: any) => {
+export function anySorter<T extends Record<string, any>>(sortBy?: keyof T, desc?: boolean) {
+  return (a: T, b: T): number => {
     if (!sortBy) {
       return 0;
     }
