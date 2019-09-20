@@ -1,7 +1,7 @@
 import { IQParserOptions } from "../src/index";
 import stringify from "es6-json-stable-stringify";
 
-export function getParserOptions(dialect?: "mongo" | "filter"): IQParserOptions {
+export function getParserOptions(dialect?: "mongo" | "filter"): IQParserOptions<any> {
   return {
     dialect,
     anyOf: ["a", "b", "s", "tag"],

@@ -13,6 +13,9 @@
         - {tag: 汉字, date: '2017-09-01'}
         - {s: [b, c], tag: [分类词汇, sth]}
         - {}
+        - {c: 5}
+        - {c: 3}
+        - {c: 1}
     - q: ' '
       cond: {}
       fullCond:
@@ -26,6 +29,9 @@
         - {tag: 汉字, date: '2017-09-01'}
         - {s: [b, c], tag: [分类词汇, sth]}
         - {}
+        - {c: 5}
+        - {c: 3}
+        - {c: 1}
     - q: a
       cond:
         $or: [{a: a}, {b: a}, {s: {$regex: a}}, {tag: {$regex: a}}]
@@ -71,7 +77,9 @@
         cond: {$or: [{s: {$regex: b\.}}, {c: {$gte: 3}}]}
         noParse: []
         fields: [s, c]
-      filteredResults: []
+      filteredResults:
+        - {c: 5}
+        - {c: 3}
     - q: 's:b. OR c>="3"'
       cond:
         $or: [{s: {$regex: b\.}}, {c: {$gte: '3'}}]
@@ -109,6 +117,9 @@
       filteredResults:
         - {tag: 汉字, date: '2017-09-01'}
         - {}
+        - {c: 5}
+        - {c: 3}
+        - {c: 1}
     - q: 'tag:NULL'
       cond:
         $or: [{tag: null}, {tag: ''}, {tag: {$exists: false}}]
@@ -121,6 +132,9 @@
         - {s: bx, date: '2019-09-01'}
         - {s: [a, b], date: '2018-09-01'}
         - {}
+        - {c: 5}
+        - {c: 3}
+        - {c: 1}
     - q: '-tag:NULL'
       cond:
         $not: {$or: [{tag: null}, {tag: ''}, {tag: {$exists: false}}]}
@@ -161,22 +175,26 @@
         - {s: [a, b], date: '2018-09-01'}
     - q: date<+3h
       cond:
-        date: {$lt: 2019-08-24T15:42:32.263Z}
+        date: {$lt: 2019-09-19T16:15:31.012Z}
       fullCond:
-        cond: {date: {$lt: 2019-08-24T15:42:32.264Z}}
+        cond: {date: {$lt: 2019-09-19T16:15:31.013Z}}
         noParse: []
         fields: [date]
       filteredResults:
+        - {s: b, date: '2019-09-01'}
+        - {s: bx, date: '2019-09-01'}
         - {s: [a, b], date: '2018-09-01'}
         - {tag: 汉字, date: '2017-09-01'}
     - q: date<NOW
       cond:
-        date: {$lt: 2019-08-24T12:42:32.265Z}
+        date: {$lt: 2019-09-19T13:15:31.014Z}
       fullCond:
-        cond: {date: {$lt: 2019-08-24T12:42:32.265Z}}
+        cond: {date: {$lt: 2019-09-19T13:15:31.014Z}}
         noParse: []
         fields: [date]
       filteredResults:
+        - {s: b, date: '2019-09-01'}
+        - {s: bx, date: '2019-09-01'}
         - {s: [a, b], date: '2018-09-01'}
         - {tag: 汉字, date: '2017-09-01'}
     - q: 'sortBy:s'
@@ -190,6 +208,9 @@
       filteredResults:
         - {tag: 汉字, date: '2017-09-01'}
         - {}
+        - {c: 5}
+        - {c: 3}
+        - {c: 1}
         - {s: b, date: '2019-09-01'}
         - {s: bx, date: '2019-09-01'}
         - {s: [a, b], date: '2018-09-01'}
@@ -224,9 +245,9 @@
         - {s: b, date: '2019-09-01'}
     - q: 'is:distinct is:due'
       cond:
-        nextReview: {$lt: 2019-08-24T12:42:32.269Z}
+        nextReview: {$lt: 2019-09-19T13:15:31.018Z}
       fullCond:
-        cond: {nextReview: {$lt: 2019-08-24T12:42:32.269Z}}
+        cond: {nextReview: {$lt: 2019-09-19T13:15:31.018Z}}
         noParse: ['is:distinct']
         fields: []
       filteredResults: []
@@ -243,6 +264,9 @@
         - {s: b, date: '2019-09-01'}
         - {tag: 汉字, date: '2017-09-01'}
         - {}
+        - {c: 5}
+        - {c: 3}
+        - {c: 1}
     - q: 'is:duplicate'
       cond: {}
       fullCond:
@@ -297,6 +321,9 @@
         - {s: b, date: '2019-09-01'}
         - {tag: 汉字, date: '2017-09-01'}
         - {}
+        - {c: 5}
+        - {c: 3}
+        - {c: 1}
     - q: ' '
       cond: {}
       fullCond:
@@ -310,6 +337,9 @@
         - {s: b, date: '2019-09-01'}
         - {tag: 汉字, date: '2017-09-01'}
         - {}
+        - {c: 5}
+        - {c: 3}
+        - {c: 1}
     - q: a
       cond:
         $or: [{a: a}, {b: a}, {s: {$substr: a}}, {tag: {$substr: a}}]
@@ -355,7 +385,9 @@
         cond: {$or: [{s: {$substr: b.}}, {c: {$gte: 3}}]}
         noParse: []
         fields: [s, c]
-      filteredResults: []
+      filteredResults:
+        - {c: 5}
+        - {c: 3}
     - q: 's:b. OR c>="3"'
       cond:
         $or: [{s: {$substr: b.}}, {c: {$gte: '3'}}]
@@ -393,6 +425,9 @@
       filteredResults:
         - {tag: 汉字, date: '2017-09-01'}
         - {}
+        - {c: 5}
+        - {c: 3}
+        - {c: 1}
     - q: 'tag:NULL'
       cond:
         tag: {$exists: false}
@@ -405,6 +440,9 @@
         - {s: bx, date: '2019-09-01'}
         - {s: b, date: '2019-09-01'}
         - {}
+        - {c: 5}
+        - {c: 3}
+        - {c: 1}
     - q: '-tag:NULL'
       cond:
         $not: {tag: {$exists: false}}
@@ -445,23 +483,27 @@
         - {s: b, date: '2019-09-01'}
     - q: date<+3h
       cond:
-        date: {$lt: 2019-08-24T15:42:32.278Z}
+        date: {$lt: 2019-09-19T16:15:31.032Z}
       fullCond:
-        cond: {date: {$lt: 2019-08-24T15:42:32.279Z}}
+        cond: {date: {$lt: 2019-09-19T16:15:31.032Z}}
         noParse: []
         fields: [date]
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
+        - {s: bx, date: '2019-09-01'}
+        - {s: b, date: '2019-09-01'}
         - {tag: 汉字, date: '2017-09-01'}
     - q: date<NOW
       cond:
-        date: {$lt: 2019-08-24T12:42:32.279Z}
+        date: {$lt: 2019-09-19T13:15:31.033Z}
       fullCond:
-        cond: {date: {$lt: 2019-08-24T12:42:32.279Z}}
+        cond: {date: {$lt: 2019-09-19T13:15:31.033Z}}
         noParse: []
         fields: [date]
       filteredResults:
         - {s: [a, b], date: '2018-09-01'}
+        - {s: bx, date: '2019-09-01'}
+        - {s: b, date: '2019-09-01'}
         - {tag: 汉字, date: '2017-09-01'}
     - q: 'sortBy:s'
       cond: {}
@@ -474,6 +516,9 @@
       filteredResults:
         - {tag: 汉字, date: '2017-09-01'}
         - {}
+        - {c: 5}
+        - {c: 3}
+        - {c: 1}
         - {s: b, date: '2019-09-01'}
         - {s: bx, date: '2019-09-01'}
         - {s: [a, b], date: '2018-09-01'}
@@ -508,9 +553,9 @@
         - {s: b, date: '2019-09-01'}
     - q: 'is:distinct is:due'
       cond:
-        nextReview: {$lt: 2019-08-24T12:42:32.280Z}
+        nextReview: {$lt: 2019-09-19T13:15:31.034Z}
       fullCond:
-        cond: {nextReview: {$lt: 2019-08-24T12:42:32.280Z}}
+        cond: {nextReview: {$lt: 2019-09-19T13:15:31.034Z}}
         noParse: ['is:distinct']
         fields: []
       filteredResults: []
@@ -527,6 +572,9 @@
         - {s: b, date: '2019-09-01'}
         - {tag: 汉字, date: '2017-09-01'}
         - {}
+        - {c: 5}
+        - {c: 3}
+        - {c: 1}
     - q: 'is:duplicate'
       cond: {}
       fullCond:
