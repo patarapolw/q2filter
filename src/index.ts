@@ -1,92 +1,70 @@
 import uuid from "uuid/v4";
 import moment from "moment";
+import merge from "lodash.merge";
 
 (moment as any).suppressDeprecationWarnings = true;
 
+export interface ISortOptions<T> {
+  key: keyof T,
+  desc: boolean
+}
+
 export interface IQParserOptions<T> {
-  dialect?: "mongo" | "filter";  // Default: mongo
-  anyOf?: Array<keyof T>,
-  isString?: Array<keyof T>;
-  isDate?: Array<keyof T>;
-  transforms?: {
+  dialect: "mongo" | "filter";  // Default: mongo
+  id: keyof T,
+  anyOf?: Set<keyof T>,
+  isString?: Set<keyof T>;
+  isDate?: Set<keyof T>;
+  transforms: {
     [expr: string]: (expr: string) => Record<string, any>;
   },
-  filters?: {
+  filters: {
     [expr: string]: (items: T[], expr: string) => T[];
   },
-  noParse?: string[];
-  sorter?: (sortBy?: keyof T, desc?: boolean) => (a: T, b: T) => number;
-  sortBy?: keyof T;
-  desc?: boolean;
-  debug?: boolean;
+  noParse: Set<string>;
+  sorter: (sortBy?: keyof T, desc?: boolean) => (a: T, b: T) => number;
+  sortBy?: ISortOptions<T>;
 }
 
 export interface IQParserResult<T> {
-  sortBy?: keyof T;
-  desc?: boolean;
-  cond: Record<string, any>;
-  noParse: string[];
-  fields: Array<keyof T>;
+  noParse: Set<string>;
+  fields: Set<keyof T>;
+  sortBy?: ISortOptions<T>;
 }
 
 export default class QParser<T extends Record<string ,any>> {
-  private dialect: "mongo" | "filter";
-  private sortBy?: keyof T;
-  private desc?: boolean;
-  private noParse = new Set<string>();
-  private fields = new Set<keyof T>();
-
-  private readonly anyOf: Set<keyof T> | null;
-  private readonly isString: Set<keyof T> | null;
-  private readonly isDate: Set<keyof T> | null;
-  private readonly transforms: Record<string, (expr: string) => Record<string, any>>;
-  private readonly filters: {
-    [expr: string]: (items: T[], expr: string) => T[];
-  }
-  private readonly sorter: (sortBy?: keyof T, desc?: boolean) =>
-  (a: T, b: T) => number;
-
-  private readonly default = {
-    sortBy: null as keyof T | null,
-    desc: null as boolean | null,
-    noParse: [] as string[]
+  public options: IQParserOptions<T> = {
+    dialect: "mongo",
+    id: "_id",
+    transforms: {},
+    filters: {},
+    sorter: anySorter,
+    noParse: new Set<string>(),
   };
 
-  private readonly debug?: boolean;
+  public result: IQParserResult<T> = {
+    noParse: new Set<string>(),
+    fields: new Set<string>()
+  };
 
-  constructor(options: IQParserOptions<T> = {}) {
-    const { dialect, anyOf, isString, isDate, transforms, filters, noParse, sorter, sortBy, desc, debug} = options;
+  constructor(public q: string, options: Partial<IQParserOptions<T>> = {}) {
+    merge(this.options, options);
 
-    this.dialect = dialect || "mongo";
-    this.anyOf = anyOf ? new Set(anyOf) : null;
-    this.isString = isString ? new Set(isString) : null;
-    this.isDate = isDate ? new Set(isDate) : null;
-    this.transforms = transforms || {};
-    this.filters = filters || {};    
-    this.sorter = sorter || anySorter;
-
-    this.default.sortBy = sortBy || null;
-    this.default.desc = desc !== undefined ? desc : null;
-
-    this.default.noParse = noParse || [];
-    this.default.noParse.push(...Object.keys(this.filters));
-
-    this.debug = debug;
+    Object.keys(this.options.filters).forEach((fk) => this.options.noParse.add(fk));
   }
 
-  public filter(items: T[], q: string): T[] {
-    const cond = this.getCond(q);
+  public parse(items: T[]): T[] {
+    const cond = this.getCond();
 
-    if (this.sortBy) {
-      items = items.sort(this.sorter(this.sortBy, getFirst({cmp: [this.desc], default: true})));
-    } else if (this.default.sortBy) {
-      items = items.sort(this.sorter(this.default.sortBy, getFirst({cmp: [this.default.desc], default: false})));
+    const {key, desc} = this.result.sortBy || this.options.sortBy || {} as any;
+    if (key) {
+      items = items.sort(this.options.sorter(key, desc))
     }
 
     items = items.filter(this.condFilter(cond));
 
-    for (const np of this.noParse) {
-      const filterFn = this.filters[np];
+    for (const np of this.result.noParse) {
+      const filterFn = this.options.filters[np];
       if (filterFn) {
         items = filterFn(items, np);
       }
@@ -95,23 +73,15 @@ export default class QParser<T extends Record<string ,any>> {
     return items;
   }
 
-  public getCond(q: string): Record<string, any> {
-    this.sortBy = undefined
-    this.desc = undefined;
-    this.noParse = new Set<string>();
-    this.fields = new Set<string>();
-
-    return this._getCond(q);
+  public getCondFull(): IQParserResult<T> & {cond: Record<string, any>} {
+    return {
+      cond: this.getCond(),
+      ...this.result
+    };
   }
 
-  public getCondFull(q: string): IQParserResult<T> {
-    return {
-      cond: this.getCond(q),
-      sortBy: this.sortBy,
-      desc: this.desc,
-      noParse: Array.from(this.noParse),
-      fields: Array.from(this.fields)
-    };
+  public getCond(): Record<string, any> {
+    return this._getCond(this.q);
   }
 
   private _getCond(q: string): Record<string, any> {
@@ -174,8 +144,10 @@ export default class QParser<T extends Record<string ,any>> {
     if (q[0] === "-") {
       const sb = "-sortBy:";
       if (q.startsWith(sb) && q !== sb) {
-        this.desc = true;
-        this.sortBy = q.substr(sb.length);
+        this.result.sortBy = {
+          desc: true,
+          key: q.substr(sb.length)
+        };
         return {};
       }
 
@@ -190,13 +162,13 @@ export default class QParser<T extends Record<string ,any>> {
     if (m) {
       let [m0, k, op, v]: any[] = m;
 
-      const transformFn = this.transforms[m0];
+      const transformFn = this.options.transforms[m0];
       if (transformFn) {
         return transformFn(m0);
       }
 
-      if (this.default.noParse.includes(m0)) {
-        this.noParse.add(m0);
+      if (this.options.noParse.has(m0)) {
+        this.result.noParse.add(m0);
         return {};
       }
 
@@ -210,26 +182,28 @@ export default class QParser<T extends Record<string ,any>> {
       }
 
       if (k === "sortBy") {
-        this.desc = false;
-        this.sortBy = v;
+        this.result.sortBy = {
+          key: v.toString(),
+          desc: false
+        };
         return {};
       }
 
       if (v === "NULL") {
-        if (this.dialect === "mongo") {
-          this.fields.add(k);
+        if (this.options.dialect === "mongo") {
+          this.result.fields.add(k);
           return { $or: [
             { [k]: null },
             { [k]: "" },
             { [k]: {$exists: false} }
           ] };
         } else {
-          this.fields.add(k);
+          this.result.fields.add(k);
           return { [k]: { $exists: false } };
         }
       }
 
-      if (this.isDate && this.isDate.has(k)) {
+      if (this.options.isDate && this.options.isDate.has(k)) {
         if (v === "NOW") {
           v = new Date();
         } else if (typeof v === "string") {
@@ -248,29 +222,25 @@ export default class QParser<T extends Record<string ,any>> {
         }
       }
 
-      if (v) {
-        if (op === ":") {
-          if (typeof v === "string" || (this.isString && this.isString.has(k))) {
-            if (this.dialect === "mongo") {
-              v = { $regex: escapeRegExp(v) };
-            } else {
-              v = { $substr: v };
-            }
+      if (op === ":") {
+        if (typeof v === "string" || (this.options.isString && this.options.isString.has(k))) {
+          if (k !== this.options.id) {
+            v = { $regex: escapeRegExp(v.toString()) };
           }
-        } else if (op === "~") {
-          v = { $regex: v.toString() };
-        } else if (op === ">=") {
-          v = { $gte: v };
-        } else if (op === ">") {
-          v = { $gt: v }
-        } else if (op === "<=") {
-          v = { $lte: v };
-        } else if (op === "<") {
-          v = { $lt: v };
         }
+      } else if (op === "~") {
+        v = { $regex: v.toString() };
+      } else if (op === ">=") {
+        v = { $gte: v };
+      } else if (op === ">") {
+        v = { $gt: v }
+      } else if (op === "<=") {
+        v = { $lte: v };
+      } else if (op === "<") {
+        v = { $lt: v };
       }
 
-      this.fields.add(k);
+      this.result.fields.add(k);
       return { [k]: v };
     }
 
@@ -282,31 +252,19 @@ export default class QParser<T extends Record<string ,any>> {
     if (q && q.indexOf(":") === -1) {
       const orCond: any[] = [];
 
-      if (this.anyOf) {
-        for (const a of this.anyOf) {
-          if (this.isString && this.isString.has(a)) {
-            let v: any;
-            if (this.dialect === "mongo") {
-              v = { $regex: escapeRegExp(q) };
-            } else {
-              v = { $substr: q };
-            }
-            this.fields.add(a);
-            orCond.push({ [a]: v });
+      if (this.options.anyOf) {
+        for (const a of this.options.anyOf) {
+          if (this.options.isString && this.options.isString.has(a)) {
+            this.result.fields.add(a);
+            orCond.push({ [a]: { $regex: escapeRegExp(q) } });
           } else {
-            this.fields.add(a);
+            this.result.fields.add(a);
             orCond.push({ [a]: q });
           }
         }
       } else {
-        let v: any;
-        if (this.dialect === "mongo") {
-          v = { $regex: escapeRegExp(q) };
-        } else {
-          v = { $substr: q };
-        }
-        this.fields.add("*");
-        return {"*": v}
+        this.result.fields.add("*");
+        return {"*": { $regex: escapeRegExp(q) }};
       }
 
       if (orCond.length > 1) {
@@ -335,7 +293,7 @@ export default class QParser<T extends Record<string ,any>> {
         } else {
           let itemK = dotGetter(item, k);
 
-          if (this.isDate && this.isDate.has(k)) {
+          if (this.options.isDate && this.options.isDate.has(k)) {
             itemK = toDateOrDefault(itemK);
           }
   
@@ -351,18 +309,6 @@ export default class QParser<T extends Record<string ,any>> {
                       return itemK.some((el) => r.test(el));
                     } else {
                       return new RegExp(v[op].toString(), "i").test(itemK);
-                    }
-                  } else if (op === "$startswith") {
-                    if (Array.isArray(itemK)) {
-                      return itemK.some((el) => el.startsWith(v[op]));
-                    } else {
-                      return itemK.startsWith(v[op]);
-                    }
-                  } else if (op === "$substr") {
-                    if (Array.isArray(itemK)) {
-                      return itemK.some((el: string) => el.includes(v[op]));
-                    } else {
-                      return itemK.includes(v[op]);
                     }
                   } else if (op === "$exists") {
                     return (itemK === null || itemK === undefined || itemK === "") !== v[op];
@@ -482,7 +428,7 @@ export function escapeRegExp(s: string) {
 
 export function toDateOrDefault(s: any) {
   try {
-    if (s) {
+    if (/\d{4}-\d{2}-\d{2}/.test(s)) {
       const m = moment(s);
       if (m.isValid()) {
         s = m.toDate();
@@ -491,22 +437,4 @@ export function toDateOrDefault(s: any) {
   } catch (e) { }
 
   return s;
-}
-
-/**
- * Because a || b || c || default doesn't always work as expected.
- * @param options 
- */
-export function getFirst(options: {
-  cmp: any[],
-  default?: any,
-  nil?: any[]
-}) {
-  options.nil = options.nil || [undefined];
-  for (const c of options.cmp) {
-    if (!options.nil.includes(c)) {
-      return c;
-    }
-  }
-  return options.default;
 }

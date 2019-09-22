@@ -1,14 +1,14 @@
 {
   "name": "q2filter",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "Search query parser from Array.prototype.filter and MongoDB",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepublishOnly": "tsc -p tsconfig.lib.json",
+    "prepublishOnly": "npm run build",
     "test:build": "ts-node tests/build.ts",
     "test": "ts-mocha tests/**/*.spec.ts",
-    "tsc": "tsc -p tsconfig.lib.json"
+    "build": "tsc -p tsconfig.lib.json"
   },
   "author": {
     "name": "Pacharapol Withayasakpunt",
@@ -37,7 +37,9 @@
     "typescript": "^3.5.3"
   },
   "dependencies": {
+    "@types/lodash.merge": "^4.6.6",
     "@types/uuid": "^3.4.5",
+    "lodash.merge": "^4.6.2",
     "moment": "^2.24.0",
     "uuid": "^3.3.3"
   }
