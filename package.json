@@ -24,7 +24,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/patarapolw/qparser.git"
+    "url": "https://github.com/patarapolw/q2filter.git"
   },
   "devDependencies": {
     "@types/js-yaml": "^3.12.1",
@@ -41,6 +41,7 @@
     "@types/uuid": "^3.4.5",
     "lodash.merge": "^4.6.2",
     "moment": "^2.24.0",
-    "uuid": "^3.3.3"
+    "uuid": "^3.3.3",
+    "valid-moment": "^1.0.0"
   }
 }

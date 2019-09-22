@@ -1,6 +1,7 @@
 import uuid from "uuid/v4";
 import moment from "moment";
 import merge from "lodash.merge";
+import { toDate } from "valid-moment";
 
 (moment as any).suppressDeprecationWarnings = true;
 
@@ -217,7 +218,7 @@ export default class QParser<T extends Record<string ,any>> {
           }
 
           if (!isMomentParsed) {
-            v = toDateOrDefault(v);
+            v = toDate(v) || v;
           }
         }
       }
@@ -294,7 +295,7 @@ export default class QParser<T extends Record<string ,any>> {
           let itemK = dotGetter(item, k);
 
           if (this.options.isDate && this.options.isDate.has(k)) {
-            itemK = toDateOrDefault(itemK);
+            itemK = toDate(itemK);
           }
   
           if (v && v.constructor === {}.constructor
@@ -313,8 +314,8 @@ export default class QParser<T extends Record<string ,any>> {
                   } else if (op === "$exists") {
                     return (itemK === null || itemK === undefined || itemK === "") !== v[op];
                   } else {
-                    let v1 = toDateOrDefault(itemK);
-                    let v2 = toDateOrDefault(v[op]);
+                    const v1 = itemK;
+                    const v2 = v[op];
 
                     let canCompare = false;
   
@@ -424,17 +425,4 @@ export function anySorter<T extends Record<string, any>>(sortBy?: keyof T, desc?
 
 export function escapeRegExp(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');  // $& means the whole matched string
-}
-
-export function toDateOrDefault(s: any) {
-  try {
-    if (/\d{4}-\d{2}-\d{2}/.test(s)) {
-      const m = moment(s);
-      if (m.isValid()) {
-        s = m.toDate();
-      }
-    }
-  } catch (e) { }
-
-  return s;
 }
