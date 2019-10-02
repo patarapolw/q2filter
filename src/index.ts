@@ -152,7 +152,7 @@ export default class QParser<T extends Record<string ,any>> {
         return {};
       }
 
-      return { $not: this._getCond(q.substr(1)) };
+      return { $nor: [this._getCond(q.substr(1))] };
     }
 
     throw new Error("Not negative");
@@ -288,8 +288,8 @@ export default class QParser<T extends Record<string ,any>> {
             return v.every((x: Record<string, any>) => this.condFilter(x)(item));
           } else if (k === "$or") {
             return v.some((x: Record<string, any>) => this.condFilter(x)(item));
-          } else if (k === "$not") {
-            return !this.condFilter(v)(item);
+          } else if (k === "$nor") {
+            return !v.some((x: Record<string, any>) => this.condFilter(x)(item));
           }
         } else {
           let itemK = dotGetter(item, k);
