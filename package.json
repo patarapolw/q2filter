@@ -1,9 +1,9 @@
 {
   "name": "q2filter",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Search query parser from Array.prototype.filter and MongoDB",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
   "scripts": {
     "prepublishOnly": "npm run build",
     "test:build": "ts-node tests/build.ts",
