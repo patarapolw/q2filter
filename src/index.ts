@@ -46,7 +46,7 @@ export default class QParser<T extends Record<string ,any>> {
 
   anyOf = new Set<string>();
   isString = new Set<string>();
-  isDate = new Set<string>();
+  isDate = new Set<string>(["created", "modified", "createdAt", "updatedAt", "date"]);
   noParse = new Set<string>();
 
   public result: IQParserResult<T> = {

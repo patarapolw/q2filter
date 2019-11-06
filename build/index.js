@@ -59,7 +59,7 @@ var QParser = /** @class */ (function () {
         };
         this.anyOf = new Set();
         this.isString = new Set();
-        this.isDate = new Set();
+        this.isDate = new Set(["created", "modified", "createdAt", "updatedAt", "date"]);
         this.noParse = new Set();
         this.result = {
             noParse: new Set(),
