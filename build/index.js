@@ -68,7 +68,7 @@ var QParser = /** @class */ (function () {
         try {
             for (var _c = __values(Object.entries(options)), _d = _c.next(); !_d.done; _d = _c.next()) {
                 var _e = __read(_d.value, 2), k = _e[0], v = _e[1];
-                if (typeof v === "object") {
+                if (v && typeof v === "object") {
                     Object.assign(this.options[k], v);
                 }
                 else if (Array.isArray(v)) {
