@@ -7,6 +7,9 @@ export interface IQParserOptions<T> {
      * @default "mongo"
      */
     dialect: "mongo" | "extended";
+    /**
+     * @default "_id"
+     */
     id: keyof T;
     anyOf?: string[];
     isString?: string[];
@@ -25,21 +28,16 @@ export interface IQParserResult<T> {
     noParse: Set<string>;
     fields: Set<keyof T>;
     sortBy?: ISortOptions;
+    cond: Record<string, any>;
 }
 export default class QParser<T extends Record<string, any>> {
-    q: string;
+    q: string | Record<string, any>;
     options: IQParserOptions<T>;
-    anyOf: Set<string>;
-    isString: Set<string>;
-    isDate: Set<string>;
-    noParse: Set<string>;
+    private sets;
     result: IQParserResult<T>;
-    constructor(q: string, options?: Partial<IQParserOptions<T>>);
+    constructor(q: string | Record<string, any>, options?: Partial<IQParserOptions<T>>);
+    filter(item: T): boolean;
     parse(items: T[]): T[];
-    getCondFull(): IQParserResult<T> & {
-        cond: Record<string, any>;
-    };
-    getCond(): Record<string, any>;
     private _getCond;
     private removeBrackets;
     private parseSep;

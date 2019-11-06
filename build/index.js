@@ -1,15 +1,4 @@
 "use strict";
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 var __values = (this && this.__values) || function (o) {
     var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
     if (m) return m.call(o);
@@ -57,13 +46,16 @@ var QParser = /** @class */ (function () {
             filters: {},
             sorter: anySorter,
         };
-        this.anyOf = new Set();
-        this.isString = new Set();
-        this.isDate = new Set(["created", "modified", "createdAt", "updatedAt", "date"]);
-        this.noParse = new Set();
+        this.sets = {
+            anyOf: new Set(),
+            isString: new Set(),
+            isDate: new Set(["created", "modified", "createdAt", "updatedAt", "date"]),
+            noParse: new Set()
+        };
         this.result = {
             noParse: new Set(),
-            fields: new Set()
+            fields: new Set(),
+            cond: {}
         };
         try {
             for (var _c = __values(Object.entries(options)), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -98,16 +90,20 @@ var QParser = /** @class */ (function () {
             }
             finally { if (e_1) throw e_1.error; }
         }
-        Object.keys(this.options.filters).forEach(function (fk) { return _this.noParse.add(fk); });
+        Object.keys(this.options.filters).forEach(function (fk) { return _this.sets.noParse.add(fk); });
+        this.result.cond = this._getCond(this.q);
     }
+    QParser.prototype.filter = function (item) {
+        return this.condFilter(this.result.cond)(item);
+    };
     QParser.prototype.parse = function (items) {
         var e_3, _a;
-        var cond = this.getCond();
+        var _this = this;
         var _b = this.result.sortBy || this.options.sortBy || {}, key = _b.key, desc = _b.desc;
         if (key) {
             items = items.sort(this.options.sorter(key, desc));
         }
-        items = items.filter(this.condFilter(cond));
+        items = items.filter(function (it) { return _this.filter(it); });
         try {
             for (var _c = __values(this.result.noParse), _d = _c.next(); !_d.done; _d = _c.next()) {
                 var np = _d.value;
@@ -126,14 +122,11 @@ var QParser = /** @class */ (function () {
         }
         return items;
     };
-    QParser.prototype.getCondFull = function () {
-        return __assign({ cond: this.getCond() }, this.result);
-    };
-    QParser.prototype.getCond = function () {
-        return this._getCond(this.q);
-    };
     QParser.prototype._getCond = function (q) {
         var e_4, _a;
+        if (typeof q === "object") {
+            return q;
+        }
         q = q.trim();
         try {
             for (var _b = __values([
@@ -228,7 +221,7 @@ var QParser = /** @class */ (function () {
             if (transformFn) {
                 return transformFn(m0);
             }
-            if (this.noParse.has(m0)) {
+            if (this.sets.noParse.has(m0)) {
                 this.result.noParse.add(m0);
                 return {};
             }
@@ -262,7 +255,7 @@ var QParser = /** @class */ (function () {
                     return _d = {}, _d[k] = { $exists: false }, _d;
                 }
             }
-            if (this.isDate.has(k)) {
+            if (this.sets.isDate.has(k)) {
                 if (v === "NOW") {
                     v = new Date();
                 }
@@ -282,7 +275,7 @@ var QParser = /** @class */ (function () {
                 }
             }
             if (op === ":") {
-                if (typeof v === "string" || this.isString.has(k)) {
+                if (typeof v === "string" || this.sets.isString.has(k)) {
                     if (k !== this.options.id) {
                         v = { $regex: escapeRegExp(v.toString()) };
                     }
@@ -316,7 +309,7 @@ var QParser = /** @class */ (function () {
                 try {
                     for (var _d = __values(this.options.anyOf), _e = _d.next(); !_e.done; _e = _d.next()) {
                         var a = _e.value;
-                        if (this.isString.has(a)) {
+                        if (this.sets.isString.has(a)) {
                             this.result.fields.add(a);
                             orCond.push((_b = {}, _b[a] = { $regex: escapeRegExp(q) }, _b));
                         }
@@ -366,7 +359,7 @@ var QParser = /** @class */ (function () {
                 }
                 else {
                     var itemK_1 = dotGetter(item, k);
-                    if (_this.isDate.has(k)) {
+                    if (_this.sets.isDate.has(k)) {
                         itemK_1 = valid_moment_1.toDate(itemK_1);
                     }
                     if (v && v.constructor === {}.constructor

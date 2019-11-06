@@ -14,6 +14,9 @@ export interface IQParserOptions<T> {
    * @default "mongo"
    */
   dialect: "mongo" | "extended";
+  /**
+   * @default "_id"
+   */
   id: keyof T;
   anyOf?: string[];
   isString?: string[];
@@ -33,6 +36,7 @@ export interface IQParserResult<T> {
   noParse: Set<string>;
   fields: Set<keyof T>;
   sortBy?: ISortOptions;
+  cond: Record<string, any>;
 }
 
 export default class QParser<T extends Record<string ,any>> {
@@ -44,17 +48,20 @@ export default class QParser<T extends Record<string ,any>> {
     sorter: anySorter,
   };
 
-  anyOf = new Set<string>();
-  isString = new Set<string>();
-  isDate = new Set<string>(["created", "modified", "createdAt", "updatedAt", "date"]);
-  noParse = new Set<string>();
+  private sets = {
+    anyOf: new Set<string>(),
+    isString: new Set<string>(),
+    isDate: new Set<string>(["created", "modified", "createdAt", "updatedAt", "date"]),
+    noParse: new Set<string>()
+  }
 
   public result: IQParserResult<T> = {
     noParse: new Set<string>(),
-    fields: new Set<string>()
+    fields: new Set<string>(),
+    cond: {}
   };
 
-  constructor(public q: string, options: Partial<IQParserOptions<T>> = {}) {
+  constructor(public q: string | Record<string, any>, options: Partial<IQParserOptions<T>> = {}) {
     for (const [k, v] of Object.entries(options)) {
       if (v && typeof v === "object") {
         Object.assign((this.options as any)[k], v);
@@ -67,18 +74,22 @@ export default class QParser<T extends Record<string ,any>> {
       }
     }
 
-    Object.keys(this.options.filters).forEach((fk) => this.noParse.add(fk));
+    Object.keys(this.options.filters).forEach((fk) => this.sets.noParse.add(fk));
+
+    this.result.cond = this._getCond(this.q);
+  }
+
+  public filter(item: T): boolean {
+    return this.condFilter(this.result.cond)(item);
   }
 
   public parse(items: T[]): T[] {
-    const cond = this.getCond();
-
     const {key, desc} = this.result.sortBy || this.options.sortBy || {} as any;
     if (key) {
       items = items.sort(this.options.sorter(key, desc))
     }
 
-    items = items.filter(this.condFilter(cond));
+    items = items.filter((it) => this.filter(it));
 
     for (const np of this.result.noParse) {
       const filterFn = this.options.filters[np];
@@ -90,18 +101,11 @@ export default class QParser<T extends Record<string ,any>> {
     return items;
   }
 
-  public getCondFull(): IQParserResult<T> & {cond: Record<string, any>} {
-    return {
-      cond: this.getCond(),
-      ...this.result
-    };
-  }
+  private _getCond(q: string | Record<string, any>): Record<string, any> {
+    if (typeof q === "object") {
+      return q;
+    }
 
-  public getCond(): Record<string, any> {
-    return this._getCond(this.q);
-  }
-
-  private _getCond(q: string): Record<string, any> {
     q = q.trim();
 
     for (const method of [
@@ -184,7 +188,7 @@ export default class QParser<T extends Record<string ,any>> {
         return transformFn(m0);
       }
 
-      if (this.noParse.has(m0)) {
+      if (this.sets.noParse.has(m0)) {
         this.result.noParse.add(m0);
         return {};
       }
@@ -220,7 +224,7 @@ export default class QParser<T extends Record<string ,any>> {
         }
       }
 
-      if (this.isDate.has(k)) {
+      if (this.sets.isDate.has(k)) {
         if (v === "NOW") {
           v = new Date();
         } else if (typeof v === "string") {
@@ -240,7 +244,7 @@ export default class QParser<T extends Record<string ,any>> {
       }
 
       if (op === ":") {
-        if (typeof v === "string" || this.isString.has(k)) {
+        if (typeof v === "string" || this.sets.isString.has(k)) {
           if (k !== this.options.id) {
             v = { $regex: escapeRegExp(v.toString()) };
           }
@@ -271,7 +275,7 @@ export default class QParser<T extends Record<string ,any>> {
 
       if (this.options.anyOf) {
         for (const a of this.options.anyOf) {
-          if (this.isString.has(a)) {
+          if (this.sets.isString.has(a)) {
             this.result.fields.add(a);
             orCond.push({ [a]: { $regex: escapeRegExp(q) } });
           } else {
@@ -310,7 +314,7 @@ export default class QParser<T extends Record<string ,any>> {
         } else {
           let itemK = dotGetter(item, k);
 
-          if (this.isDate.has(k)) {
+          if (this.sets.isDate.has(k)) {
             itemK = toDate(itemK);
           }
   
