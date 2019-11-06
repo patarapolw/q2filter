@@ -1,31 +1,38 @@
-export interface ISortOptions<T> {
-    key: keyof T;
+export interface ISortOptions {
+    key: string;
     desc: boolean;
 }
 export interface IQParserOptions<T> {
-    dialect: "mongo" | "filter";
+    /**
+     * @default "mongo"
+     */
+    dialect: "mongo" | "extended";
     id: keyof T;
-    anyOf?: Set<keyof T>;
-    isString?: Set<keyof T>;
-    isDate?: Set<keyof T>;
+    anyOf?: string[];
+    isString?: string[];
+    isDate?: string[];
+    noParse?: string[];
     transforms: {
         [expr: string]: (expr: string) => Record<string, any>;
     };
     filters: {
         [expr: string]: (items: T[], expr: string) => T[];
     };
-    noParse: Set<string>;
-    sorter: (sortBy?: keyof T, desc?: boolean) => (a: T, b: T) => number;
-    sortBy?: ISortOptions<T>;
+    sorter: (sortBy?: string, desc?: boolean) => (a: T, b: T) => number;
+    sortBy?: ISortOptions;
 }
 export interface IQParserResult<T> {
     noParse: Set<string>;
     fields: Set<keyof T>;
-    sortBy?: ISortOptions<T>;
+    sortBy?: ISortOptions;
 }
 export default class QParser<T extends Record<string, any>> {
     q: string;
     options: IQParserOptions<T>;
+    anyOf: Set<string>;
+    isString: Set<string>;
+    isDate: Set<string>;
+    noParse: Set<string>;
     result: IQParserResult<T>;
     constructor(q: string, options?: Partial<IQParserOptions<T>>);
     parse(items: T[]): T[];

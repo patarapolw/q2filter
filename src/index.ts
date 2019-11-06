@@ -1,36 +1,38 @@
 import uuid from "uuid/v4";
 import moment from "moment";
-import merge from "lodash.merge";
 import { toDate } from "valid-moment";
 
 (moment as any).suppressDeprecationWarnings = true;
 
-export interface ISortOptions<T> {
-  key: keyof T,
+export interface ISortOptions {
+  key: string,
   desc: boolean
 }
 
 export interface IQParserOptions<T> {
-  dialect: "mongo" | "filter";  // Default: mongo
-  id: keyof T,
-  anyOf?: Set<keyof T>,
-  isString?: Set<keyof T>;
-  isDate?: Set<keyof T>;
+  /**
+   * @default "mongo"
+   */
+  dialect: "mongo" | "extended";
+  id: keyof T;
+  anyOf?: string[];
+  isString?: string[];
+  isDate?: string[];
+  noParse?: string[];
   transforms: {
     [expr: string]: (expr: string) => Record<string, any>;
-  },
+  };
   filters: {
     [expr: string]: (items: T[], expr: string) => T[];
-  },
-  noParse: Set<string>;
-  sorter: (sortBy?: keyof T, desc?: boolean) => (a: T, b: T) => number;
-  sortBy?: ISortOptions<T>;
+  };
+  sorter: (sortBy?: string, desc?: boolean) => (a: T, b: T) => number;
+  sortBy?: ISortOptions;
 }
 
 export interface IQParserResult<T> {
   noParse: Set<string>;
   fields: Set<keyof T>;
-  sortBy?: ISortOptions<T>;
+  sortBy?: ISortOptions;
 }
 
 export default class QParser<T extends Record<string ,any>> {
@@ -40,8 +42,12 @@ export default class QParser<T extends Record<string ,any>> {
     transforms: {},
     filters: {},
     sorter: anySorter,
-    noParse: new Set<string>(),
   };
+
+  anyOf = new Set<string>();
+  isString = new Set<string>();
+  isDate = new Set<string>();
+  noParse = new Set<string>();
 
   public result: IQParserResult<T> = {
     noParse: new Set<string>(),
@@ -49,9 +55,19 @@ export default class QParser<T extends Record<string ,any>> {
   };
 
   constructor(public q: string, options: Partial<IQParserOptions<T>> = {}) {
-    merge(this.options, options);
+    for (const [k, v] of Object.entries(options)) {
+      if (typeof v === "object") {
+        Object.assign((this.options as any)[k], v);
+      } else if (Array.isArray(v)) {
+        for (const v0 of v) {
+          (this as any)[k].add(v0);
+        }
+      } else {
+        (this.options as any)[k] = v;
+      }
+    }
 
-    Object.keys(this.options.filters).forEach((fk) => this.options.noParse.add(fk));
+    Object.keys(this.options.filters).forEach((fk) => this.noParse.add(fk));
   }
 
   public parse(items: T[]): T[] {
@@ -168,7 +184,7 @@ export default class QParser<T extends Record<string ,any>> {
         return transformFn(m0);
       }
 
-      if (this.options.noParse.has(m0)) {
+      if (this.noParse.has(m0)) {
         this.result.noParse.add(m0);
         return {};
       }
@@ -204,7 +220,7 @@ export default class QParser<T extends Record<string ,any>> {
         }
       }
 
-      if (this.options.isDate && this.options.isDate.has(k)) {
+      if (this.isDate.has(k)) {
         if (v === "NOW") {
           v = new Date();
         } else if (typeof v === "string") {
@@ -224,7 +240,7 @@ export default class QParser<T extends Record<string ,any>> {
       }
 
       if (op === ":") {
-        if (typeof v === "string" || (this.options.isString && this.options.isString.has(k))) {
+        if (typeof v === "string" || this.isString.has(k)) {
           if (k !== this.options.id) {
             v = { $regex: escapeRegExp(v.toString()) };
           }
@@ -255,7 +271,7 @@ export default class QParser<T extends Record<string ,any>> {
 
       if (this.options.anyOf) {
         for (const a of this.options.anyOf) {
-          if (this.options.isString && this.options.isString.has(a)) {
+          if (this.isString.has(a)) {
             this.result.fields.add(a);
             orCond.push({ [a]: { $regex: escapeRegExp(q) } });
           } else {
@@ -294,7 +310,7 @@ export default class QParser<T extends Record<string ,any>> {
         } else {
           let itemK = dotGetter(item, k);
 
-          if (this.options.isDate && this.options.isDate.has(k)) {
+          if (this.isDate.has(k)) {
             itemK = toDate(itemK);
           }
   
@@ -373,19 +389,15 @@ export function dotGetter(d: any, k: string) {
     } else if (Array.isArray(v)) {
       try {
         v = v[parseInt(kn)];
-        if (v === undefined) {
-          v = null;
-          break;
-        }
       } catch (e) {
-        v = null;
+        v = undefined;
         break;
       }
     }
   }
 
   if (v && v.constructor === {}.constructor && Object.keys(v).length === 0) {
-    v = null;
+    v = undefined;
   }
 
   return v;
