@@ -64,6 +64,7 @@ export default class QParser<T extends Record<string ,any>> {
   constructor(public q: string | Record<string, any>, options: Partial<IQParserOptions<T>> = {}) {
     for (const [k, v] of Object.entries(options)) {
       if (v && typeof v === "object") {
+        (this.options as any)[k] = (this.options as any)[k] || {};
         Object.assign((this.options as any)[k], v);
       } else if (Array.isArray(v)) {
         for (const v0 of v) {
